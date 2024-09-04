@@ -51,6 +51,7 @@ const Login: React.FC = () => {
     return (
         <div className="w-full h-screen flex justify-center items-center bg-gray-100">
             <form
+            method="post"
                 onSubmit={
                   handleSubmit(onSubmit)}
                 className="w-full max-w-md bg-white shadow-md rounded-md p-8 md:p-16"

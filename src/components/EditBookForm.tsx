@@ -1,10 +1,10 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useRouter } from "next/navigation";
-import { createNewBook } from "@/api/bookApi";
+import { createNewBook, getBookById, updateBook } from "@/api/bookApi";
 
 // Define form input types
 type FormValues = {
@@ -19,11 +19,18 @@ type FormValues = {
 
 // Define validation schema using Yup
 const validationSchema = Yup.object().shape({
-    image: Yup.mixed()
-        .test("fileRequired", "Book image is required", (value) => {
-            return value && (value as FileList).length > 0; // Check if file is uploaded
-        })
-        .required("Book image is required"),
+    image: Yup.mixed().test(
+        "fileType",
+        "Uploaded file must be an image",
+        (value) => {
+            // If value is not provided, it's valid (optional)
+            if (!value || (value as FileList).length === 0) {
+                return true;
+            }
+            // If a value is provided, check if it's an image
+            return (value as FileList)[0].type.startsWith("image/");
+        }
+    ),
     name: Yup.string()
         .required("Book name is required")
         .min(2, "Name must be at least 2 characters"),
@@ -40,10 +47,11 @@ const validationSchema = Yup.object().shape({
         .min(10, "Description must be at least 10 characters"),
 });
 
-const AddBookForm: React.FC = () => {
+const EditBookForm = ({ bookId }: { bookId: string }) => {
     const {
         register,
         handleSubmit,
+        setValue,
         formState: { errors },
     } = useForm<FormValues>({
         resolver: yupResolver(validationSchema) as any, // Cast to any to handle mixed type issue
@@ -51,6 +59,23 @@ const AddBookForm: React.FC = () => {
 
     const router = useRouter();
     const [serverError, setServerError] = useState<string | null>(null);
+
+    useEffect(() => {
+        (async () => {
+            const response = await getBookById(bookId);
+            if (response?.data) {
+                const book = response.data;
+
+                // Set initial values using setValue
+                setValue("name", book.title);
+                setValue("author", book.author);
+                setValue("isbn", book.isbn);
+                setValue("publication", book.publisher);
+                setValue("year", book.publishedDate);
+                setValue("description", book.description);
+            }
+        })();
+    }, [bookId, setValue]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
         try {
@@ -63,9 +88,11 @@ const AddBookForm: React.FC = () => {
             formData.append("publishedDate", data.year);
             formData.append("publisher", data.publication);
             formData.append("title", data.name);
-            formData.append("image", data.image[0]);
+            if (data.image[0]) {
+                formData.append("image", data.image[0]);
+            }
 
-            const response = await createNewBook(formData);
+            const response = await updateBook(bookId, formData);
             if (response?.data) {
                 router.replace("/admin");
             }
@@ -248,4 +275,4 @@ const AddBookForm: React.FC = () => {
     );
 };
 
-export default AddBookForm;
+export default EditBookForm;

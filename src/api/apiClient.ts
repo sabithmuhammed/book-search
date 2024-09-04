@@ -8,7 +8,10 @@ export default Api;
 
 Api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("accessToken");
+        let token = null
+        if(typeof window !== "undefined"){
+            token = localStorage.getItem("accessToken");
+        }
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

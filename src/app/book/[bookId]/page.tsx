@@ -28,7 +28,7 @@ const BookPage = async({params}: { params: { bookId: string } }) => {
           </div>
           <div className="flex flex-col mb-4">
             <p className="text-sm text-gray-500 font-semibold">ISBN</p>
-            <p className="pl-2 text-gray-700">978-0439708180</p>
+            <p className="pl-2 text-gray-700">{book.isbn}</p>
           </div>
           <div className="flex flex-col mb-4">
             <p className="text-sm text-gray-500 font-semibold">Publication Details</p>
